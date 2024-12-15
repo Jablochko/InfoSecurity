@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<html lang="ru">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Шифр Виженера</title>
+    <link rel="stylesheet" href="../../main.css">
+</head>
+
+<body>
+    <script src="cipherVigenere.js"></script>
+    <div>
+        <h1>Шифр Виженера</h1>
+        <label for="inputText">Введите сообщение:</label>
+        <input id="inputText" rows="4" cols="50" />
+
+        <label for="encryptKey">Введите ключ:</label>
+        <input type="text" id="encryptKey">
+
+        <button onclick="handleCrypt()">Зашифровать и расшифровать</button>
+
+        <div>
+            <label for="encryptedKeyOutput">Дополненный ключ:</label><br>
+            <output id="encryptedKeyOutput"></output>
+        </div>
+        <div>
+            <label for="encryptedOutput">Зашифрованное сообщение:</label><br>
+            <output id="encryptedOutput"></output>
+        </div>
+        <div>
+            <label for="decryptedOutput">Дешифрованное сообщение:</label><br>
+            <output id="decryptedOutput"></output>
+        </div>
+    </div>
+</body>
+
+</html>

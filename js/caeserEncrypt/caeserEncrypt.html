@@ -1,0 +1,39 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Info Security</title>
+    <link rel="stylesheet" href="../../main.css" />
+</head>
+
+<body>
+    <div class="container">
+        <h1>Шифр Цезаря</h1>
+        <form id="cipherForm">
+            <div>
+                <label for="textInput">Введите строку (рус/англ):</label><br>
+                <input type="text" id="textInput" name="textInput" required />
+            </div>
+            <div>
+                <label for="shiftInput">Введите сдвиг (число):</label><br>
+                <input type="number" id="shiftInput" name="shiftInput" required />
+            </div>
+            <div>
+                <button type="button" onclick="processCipher()">Зашифровать/Дешифровать</button>
+            </div>
+            <div>
+                <label for="encryptedOutput">Зашифрованное сообщение:</label><br>
+                <output id="encryptedOutput"></output>
+            </div>
+            <div>
+                <label for="decryptedOutput">Дешифрованное сообщение:</label><br>
+                <output id="decryptedOutput"></output>
+            </div>
+        </form>
+    </div>
+    <script src="caeserEncrypt.js"></script>
+</body>
+
+</html>

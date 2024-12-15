@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+<html lang="ru">
+
+<head>
+    <!-- <meta charset="UTF-8"> -->
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>RC5 Cipher</title>
+    <link rel="stylesheet" href="../../main.css">
+</head>
+
+<body>
+    <div>
+        <h1>Шифр RC5</h1>
+        <form id="rc5-form" onsubmit="encryptMessage(event)">
+            <input id="rounds" type="number" placeholder="Количество раундов" value="12">
+            <input id="blocksize" type="number" placeholder="Размер блока в битах" value="64">
+            <input id="keysize" type="number" placeholder="Размер ключа в битах" value="128">
+            <textarea id="message" placeholder="Введите сообщение здесь"></textarea>
+            <button type="submit">Зашифровать</button>
+
+            <p>Используемый ключ: <span id="used-key"></span></p>
+
+            <p>Зашифрованное сообщение:</p>
+            <pre id="encrypted"></pre>
+
+            <p>Расшифрованное сообщение:</p>
+            <pre id="decrypted"></pre>
+        </form>
+    </div>
+
+    <script src="rc5Encrypt.js"></script>
+
+</body>
+
+</html>
