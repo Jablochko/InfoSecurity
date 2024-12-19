@@ -4,11 +4,30 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Document</title>
-    <link ref="stylesheet" href="../../main.css">
+    <title>RSA Encryption</title>
+    <link rel="stylesheet" href="../../main.css">
 </head>
 
 <body>
+    <div>
+        <h1>Шифрование и дешифрование RSA</h1>
+
+        <div>
+            <label for="message">Введите текст для шифрования</label>
+            <input type="text" id="message" placeholder="Введите сообщение для шифрования"/>
+            <button onclick="startEncryption()">Зашифровать</button>
+
+            <h2>Public Key:</h2>
+            <p id="publicKey"></p>
+
+            <h2>Private Key:</h2>
+            <p id="privateKey"></p>
+            <h2>Зашифрованное сообщение:</h2>
+            <p id="encryptedMessage"></p>
+            <h2>Дешифрованное сообщение:</h2>
+            <p id="decryptedMessage"></p>
+        </div>
+    </div>
     <script src="rsaEncrypt.js"></script>
 </body>
 
