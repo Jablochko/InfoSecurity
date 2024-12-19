@@ -137,13 +137,23 @@ function byteArrayToBigInt(byteArray) {
     return result;
 }
 
-function bigIntToByteArray(bigInt) {
+function bigIntToByteArray(bigInt, size) {
     const byteArray = [];
     while (bigInt > 0) {
-        byteArray.push(Number(bigInt & 0xffn));
-        bigInt >>= 8n;
+        byteArray.unshift(Number(bigInt % 256n));
+        bigInt = bigInt / 256n;
     }
-    return byteArray.reverse();
+
+    // Если длина больше ожидаемой, обрезаем лишние байты
+    while (byteArray.length < size) {
+        byteArray.unshift(0);
+    }
+
+    if (byteArray.length > size) {
+        return byteArray.slice(-size); // Оставляем только последние байты
+    }
+
+    return byteArray;
 }
 
 function byteArrayToBase64(byteArray) {
@@ -158,54 +168,219 @@ function base64ToByteArray(base64) {
     );
 }
 
-const key = 123456789;
-const rc5 = new RC5Cipher(
-    32,
-    12,
-    new Uint8Array(new Uint32Array([key]).buffer)
-);
+function encryptMessage() {
+    const rounds = parseInt(document.getElementById("rounds").value, 10);
+    const blockSize = parseInt(document.getElementById("blocksize").value, 10);
+    const keySize = parseInt(document.getElementById("keysize").value, 10);
+    const message = document.getElementById("message").value;
 
-let message = prompt("Введите сообщение для шифрования:");
+    if (!message) {
+        alert("Введите сообщение!");
+        return;
+    }
 
-const byteArrayMessage = stringToByteArray(message);
+    const key = new Uint8Array(keySize / 8).fill(1);
+    const rc5 = new RC5Cipher(blockSize, rounds, key);
 
-const blockSize = 8;
-const paddedLength = Math.ceil(byteArrayMessage.length / blockSize) * blockSize;
-const paddedMessage = new Uint8Array(paddedLength);
-paddedMessage.set(byteArrayMessage);
-for (let i = byteArrayMessage.length; i < paddedLength; i++) {
-    paddedMessage[i] = 0;
+    const byteArrayMessage = stringToByteArray(message);
+
+    const paddedLength =
+        Math.ceil(byteArrayMessage.length / (blockSize / 8)) * (blockSize / 8);
+    const paddedMessage = new Uint8Array(paddedLength);
+    paddedMessage.set(byteArrayMessage);
+    for (let i = byteArrayMessage.length; i < paddedLength; i++) {
+        paddedMessage[i] = 0;
+    }
+
+    const encryptedBlocks = [];
+    for (let i = 0; i < paddedMessage.length; i += blockSize / 8) {
+        const block = paddedMessage.slice(i, i + blockSize / 8);
+        const encryptedBlock = rc5.encryptBlock(byteArrayToBigInt(block));
+        const encryptedBytes = bigIntToByteArray(encryptedBlock);
+        encryptedBlocks.push(...encryptedBytes);
+    }
+
+    const encryptedBase64 = byteArrayToBase64(encryptedBlocks);
+    document.getElementById("encrypted").textContent = encryptedBase64;
+    document.getElementById("used-key").textContent = key
+        .map((byte) => byte.toString(16).padStart(2, "0"))
+        .join("");
 }
 
-const encryptedBlocks = [];
-for (let i = 0; i < paddedMessage.length; i += blockSize) {
-    const block = paddedMessage.slice(i, i + blockSize);
-    const encryptedBlock = rc5.encryptBlock(byteArrayToBigInt(block));
+function decryptMessage() {
+    try {
+        const encryptedInput = document.getElementById("encrypted-input").value;
+        const keyInput = document.getElementById("decrypt-key").value;
 
-    const encryptedBytes = bigIntToByteArray(encryptedBlock);
-    encryptedBlocks.push(...encryptedBytes);
+        if (!encryptedInput || !keyInput) {
+            alert("Введите зашифрованное сообщение и ключ!");
+            return;
+        }
+
+        const rounds = parseInt(document.getElementById("rounds").value, 10);
+        const blockSize = parseInt(
+            document.getElementById("blocksize").value,
+            10
+        );
+        const keySize = parseInt(document.getElementById("keysize").value, 10);
+        const blockSizeBytes = blockSize / 8;
+
+        // Преобразование ключа
+        let keyBytes = new Uint8Array(
+            keyInput.split("").map((char) => char.charCodeAt(0))
+        );
+
+        console.log("Длина ключа:", keyBytes.length);
+        console.log("Ожидаемая длина ключа:", keySize / 8);
+
+        // Проверка длины ключа
+        if (keyBytes.length !== keySize / 8) {
+            alert(
+                `Длина ключа (${
+                    keyBytes.length
+                }) не совпадает с ожидаемой длиной (${keySize / 8}).`
+            );
+            return;
+        }
+
+        const rc5 = new RC5Cipher(blockSize, rounds, keyBytes);
+
+        // Преобразование зашифрованного текста из Base64 в байты
+        const encryptedBytes = base64ToByteArray(encryptedInput);
+
+        console.log("Длина зашифрованных данных:", encryptedBytes.length);
+        console.log("Ожидается кратность размера блока:", blockSizeBytes);
+
+        if (encryptedBytes.length % blockSizeBytes !== 0) {
+            alert("Некорректная длина зашифрованного сообщения!");
+            return;
+        }
+
+        const decryptedBlocks = [];
+        for (let i = 0; i < encryptedBytes.length; i += blockSizeBytes) {
+            const block = encryptedBytes.slice(i, i + blockSizeBytes);
+            const decryptedBlock = rc5.decryptBlock(byteArrayToBigInt(block));
+            decryptedBlocks.push(decryptedBlock);
+        }
+
+        const decryptedByteArray = new Uint8Array(
+            decryptedBlocks.length * blockSizeBytes
+        );
+
+        for (let i = 0; i < decryptedBlocks.length; i++) {
+            // Преобразование блока с указанием размера
+            const block = bigIntToByteArray(decryptedBlocks[i], blockSizeBytes);
+
+            if (block.length !== blockSizeBytes) {
+                console.error(
+                    `Ошибка: Блок ${i} имеет размер ${block.length}, ожидалось ${blockSizeBytes}`
+                );
+                throw new Error(
+                    `Блок ${i} слишком длинный! Ожидалось ${blockSizeBytes}, а получено ${block.length}`
+                );
+            }
+
+            decryptedByteArray.set(block, i * blockSizeBytes);
+        }
+
+        // Преобразование массива байтов обратно в строку
+        const decryptedMessage = byteArrayToString(decryptedByteArray).replace(
+            /\0/g,
+            ""
+        );
+
+        console.log("Расшифрованное сообщение:", decryptedMessage);
+        document.getElementById("decrypted").textContent = decryptedMessage;
+    } catch (error) {
+        console.error("Ошибка при дешифровании:", error.message);
+        alert(
+            "Произошла ошибка при дешифровании. Проверьте данные и повторите попытку."
+        );
+    }
 }
 
-const encryptedBase64 = byteArrayToBase64(encryptedBlocks);
+// function decryptMessage() {
+//     try {
+//         const encryptedInput = document.getElementById("encrypted-input").value;
+//         const keyInput = document.getElementById("decrypt-key").value;
 
-const decryptedBlocks = [];
-for (let i = 0; i < encryptedBlocks.length; i += blockSize) {
-    const block = encryptedBlocks.slice(i, i + blockSize);
-    const decryptedBlock = rc5.decryptBlock(byteArrayToBigInt(block));
-    decryptedBlocks.push(decryptedBlock);
-}
+//         if (!encryptedInput || !keyInput) {
+//             alert("Введите зашифрованное сообщение и ключ!");
+//             return;
+//         }
 
-const decryptedByteArray = new Uint8Array(decryptedBlocks.length * blockSize);
-for (let i = 0; i < decryptedBlocks.length; i++) {
-    const block = bigIntToByteArray(decryptedBlocks[i]);
-    decryptedByteArray.set(block, i * blockSize);
-}
+//         const rounds = parseInt(document.getElementById("rounds").value, 10);
+//         const blockSize = parseInt(
+//             document.getElementById("blocksize").value,
+//             10
+//         );
+//         const keySize = parseInt(document.getElementById("keysize").value, 10);
+//         const blockSizeBytes = blockSize / 8;
 
-const decryptedMessage = byteArrayToString(decryptedByteArray).replace(
-    /\0/g,
-    ""
-);
+//         // Преобразование ключа
+//         let keyBytes = new Uint8Array(
+//             keyInput.split("").map((char) => char.charCodeAt(0))
+//         );
 
-console.log(`Key: ${key}`);
-console.log(`Encrypted (Base64): ${encryptedBase64}`);
-console.log(`Decrypted: ${decryptedMessage}`);
+//         console.log("Длина ключа:", keyBytes.length);
+//         console.log("Ожидаемая длина ключа:", keySize / 8);
+
+//         // Проверка длины ключа
+//         if (keyBytes.length !== keySize / 8) {
+//             alert(
+//                 `Длина ключа (${
+//                     keyBytes.length
+//                 }) не совпадает с ожидаемой длиной (${keySize / 8}).`
+//             );
+//             return;
+//         }
+
+//         const rc5 = new RC5Cipher(blockSize, rounds, keyBytes);
+
+//         // Преобразование зашифрованного текста из Base64 в байты
+//         const encryptedBytes = base64ToByteArray(encryptedInput);
+
+//         console.log("Длина зашифрованных данных:", encryptedBytes.length);
+//         console.log("Ожидается кратность размера блока:", blockSizeBytes);
+
+//         if (encryptedBytes.length % blockSizeBytes !== 0) {
+//             alert("Некорректная длина зашифрованного сообщения!");
+//             return;
+//         }
+
+//         const decryptedBlocks = [];
+//         for (let i = 0; i < encryptedBytes.length; i += blockSizeBytes) {
+//             const block = encryptedBytes.slice(i, i + blockSizeBytes);
+//             const decryptedBlock = rc5.decryptBlock(byteArrayToBigInt(block));
+//             decryptedBlocks.push(decryptedBlock);
+//         }
+
+//         const decryptedByteArray = new Uint8Array(
+//             decryptedBlocks.length * blockSizeBytes
+//         );
+
+//         for (let i = 0; i < decryptedBlocks.length; i++) {
+//             // Преобразование блока с указанием размера
+//             const block = bigIntToByteArray(decryptedBlocks[i], blockSizeBytes);
+
+//             if (block.length !== blockSizeBytes) {
+//                 console.error(
+//                     `Ошибка: Блок ${i} имеет размер ${block.length}, ожидалось ${blockSizeBytes}`
+//                 );
+//                 throw new Error(
+//                     `Блок ${i} слишком длинный! Ожидалось ${blockSizeBytes}, а получено ${block.length}`
+//                 );
+//             }
+
+//             decryptedByteArray.set(block, i * blockSizeBytes);
+//         }
+
+//         console.log("Расшифрованное сообщение:", decryptedMessage);
+//         document.getElementById("decrypted").textContent = decryptedMessage;
+//     } catch (error) {
+//         console.error("Ошибка при дешифровании:", error.message);
+//         alert(
+//             "Произошла ошибка при дешифровании. Проверьте данные и повторите попытку."
+//         );
+//     }
+// }

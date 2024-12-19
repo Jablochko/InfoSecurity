@@ -18,18 +18,16 @@
             </div>
             <div>
                 <label for="shiftInput">Введите сдвиг (число):</label><br>
-                <input type="number" id="shiftInput" name="shiftInput" required />
+                <input type="number" id="shiftInput" name="shiftInput" />
             </div>
             <div>
-                <button type="button" onclick="processCipher()">Зашифровать/Дешифровать</button>
+                <button type="button" onclick="encryptText()">Зашифровать</button>
+                <button type="button" onclick="decryptText()">Дешифровать</button>
+                <button type="button" onclick="crackCipherWithFrequency()">Взломать</button>
             </div>
             <div>
-                <label for="encryptedOutput">Зашифрованное сообщение:</label><br>
-                <output id="encryptedOutput"></output>
-            </div>
-            <div>
-                <label for="decryptedOutput">Дешифрованное сообщение:</label><br>
-                <output id="decryptedOutput"></output>
+                <label for="encryptedOutput">Результат:</label><br>
+                <output id="resultOutput"></output>
             </div>
         </form>
     </div>

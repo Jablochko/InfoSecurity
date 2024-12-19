@@ -9,30 +9,28 @@
 </head>
 
 <body>
-    <script src="cipherVigenere.js"></script>
     <div>
         <h1>Шифр Виженера</h1>
-        <label for="inputText">Введите сообщение:</label>
-        <input id="inputText" rows="4" cols="50" />
 
-        <label for="encryptKey">Введите ключ:</label>
-        <input type="text" id="encryptKey">
+        <input type="text" id="inputText" placeholder="Введите текст" />
+        <input type="text" id="encryptKey" placeholder="Введите ключ" />
 
-        <button onclick="handleCrypt()">Зашифровать и расшифровать</button>
+        <!-- Кнопки для шифрования и дешифрования -->
+        <button onclick="encryptText()">Зашифровать</button>
+        <button onclick="decryptText()">Дешифровать</button>
+        <button onclick="crackVigenereCipher()">Взломать шифр</button> <!-- Кнопка для взлома -->
 
         <div>
-            <label for="encryptedKeyOutput">Дополненный ключ:</label><br>
-            <output id="encryptedKeyOutput"></output>
-        </div>
-        <div>
-            <label for="encryptedOutput">Зашифрованное сообщение:</label><br>
-            <output id="encryptedOutput"></output>
-        </div>
-        <div>
-            <label for="decryptedOutput">Дешифрованное сообщение:</label><br>
-            <output id="decryptedOutput"></output>
+            <div id="encryptedOutput"></div>
+
+            <div id="decryptedOutput"></div>
+
+            <div id="encryptedKeyOutput"></div>
+
+            <div id="hackedOutput"></div> <!-- Блок для вывода взломанного текста -->
         </div>
     </div>
+    <script src="cipherVigenere.js"></script>
 </body>
 
 </html>
